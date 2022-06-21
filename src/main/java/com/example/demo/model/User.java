@@ -5,70 +5,34 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.persistence.*;
-import java.util.*;
+import javax.validation.constraints.NotNull;
+import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@Data
-@EqualsAndHashCode(of = "id")
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name = "users")
+@EqualsAndHashCode
+@ToString
 public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
+    private static final long serialVersionUID = 8309478343324476945L;
 
-    @Column(name = "email", unique = true, nullable = false)
+    private long id;
+    @NotNull
     private String username;
-
-    @Column(name = "firstname")
-    private String firstname;
-
-    @Column(name = "lastname")
-    private String lastname;
-
-    @Column(nullable = false)
+    private String firstName;
+    private String lastName;
+    @NotNull
     private String password;
-
-    @Column(name = "age")
     private byte age;
-
-    @ManyToMany
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
-
-    public User(String username, Set<Role> roles) {
-        this.username = username;
-        this.roles = roles;
-    }
-
-    public User(String username, String firstname, String lastname, String password, byte age) {
-        this.username = username;
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.password = password;
-        this.age = age;
-    }
+    private Set<Role> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return username;
     }
 
     @Override

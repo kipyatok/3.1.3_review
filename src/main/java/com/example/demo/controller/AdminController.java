@@ -2,34 +2,34 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
-import com.example.demo.service.UserDetailServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.demo.service.UserDetailService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-@Controller
-@RequestMapping("/admin")
+import static com.example.demo.controller.DemoParams.ID;
+import static com.example.demo.controller.DemoParams.ROLE_BOX;
+import static com.example.demo.controller.DemoPaths.*;
+
+@RestController
+@RequestMapping(ADMIN_URL)
+@RequiredArgsConstructor
 public class AdminController {
 
-    private final UserDetailServiceImpl userService;
+    private final UserDetailService userService;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public AdminController(UserDetailServiceImpl userService, PasswordEncoder passwordEncoder) {
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     // start page
-    @GetMapping("/")
+    @GetMapping(GET_USERS_URL)
     public String showAllUsers(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User user = (User) userService.loadUserByUsername(userDetails.getUsername());
+        User user = userService.loadUserByUsername(userDetails.getUsername());
         model.addAttribute("newUser", new User());
         model.addAttribute("roleList", userService.getAllRoles());
         model.addAttribute("rolesList", user.getRoles());
@@ -38,44 +38,43 @@ public class AdminController {
     }
 
     // add new user
-    @PostMapping("/saveUser")
-    public String addUser(@ModelAttribute User newUser,
-                          @RequestParam(value = "roleBox", required = false) Long[] roleBox) {
-        Set<Role> rolesSet = new HashSet<>();
-        if (roleBox != null) {
-            for (long i : roleBox) {
-                rolesSet.add(userService.getRoleById(i));
-            }
-        }
-        newUser.setRoles(rolesSet);
-        userService.saveUser(newUser);
-        return "redirect:/admin/";
+    @PostMapping(SAVE_USER_URL)
+    public String addUser(@RequestBody User user,
+                          @RequestParam(value = ROLE_BOX, required = false) Long[] roleBox) {
+
+        user.setRoles(rolesIdToRoles(roleBox));
+        userService.saveUser(user);
+
+        return REDIRECT_URL;
     }
 
 
     //update user
 
-    @PutMapping("updateUser/{id}")
-    public String updateUser(@ModelAttribute User editUser,
-                             @RequestParam(value = "roleBox", required = false) Long[] roleBox) {
-        Set<Role> rolesSet = new HashSet<>();
+    @PutMapping(UPDATE_USER_URL)
+    public String updateUser(@RequestBody User user,
+                             @RequestParam(value = ROLE_BOX, required = false) Long[] roleBox) {
 
-        if (roleBox != null) {
-            for (long i : roleBox) {
-                rolesSet.add(userService.getRoleById(i));
-            }
-        }
-        editUser.setRoles(rolesSet);
-        userService.saveAndFlush(editUser);
-        return "redirect:/admin/";
+        user.setRoles(rolesIdToRoles(roleBox));
+        userService.updateUser(user);
+
+        return REDIRECT_URL;
     }
 
 
     //delete user
-    @GetMapping("/deleteUser/{id}")
-    public String deleteUser(@PathVariable("id") long id) {
+    @DeleteMapping(DELETE_USER_URL)
+    public String deleteUser(@PathVariable(ID) long id) {
         userService.deleteUserById(id);
-        return "redirect:/admin/";
+        return REDIRECT_URL;
+    }
+
+    // package
+
+    Set<Role> rolesIdToRoles(Long[] rolesId) {
+        return Arrays.stream(rolesId)
+                .map(userService::getRoleById)
+                .collect(Collectors.toSet());
     }
 
 }
