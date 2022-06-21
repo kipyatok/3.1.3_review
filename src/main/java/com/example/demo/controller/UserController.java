@@ -1,8 +1,8 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.User;
-import com.example.demo.service.UserDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.demo.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,18 +17,14 @@ import static com.example.demo.controller.DemoPaths.GET_USERS_URL;
 
 @RestController
 @RequestMapping(BASE_URL)
+@RequiredArgsConstructor
 public class UserController {
 
-    private final UserDetailService userService;
-
-    @Autowired
-    public UserController(UserDetailService userService) {
-        this.userService = userService;
-    }
+    private final UserService userService;
 
     @GetMapping(GET_USERS_URL)
     public String showAllUsers(Model model, Principal principal) {
-        User users = userService.loadUserByUsername(principal.getName());
+        User users = (User) userService.loadUserByUsername(principal.getName());
         model.addAttribute(ROLES, users.getRoles());
         model.addAttribute(USERS, users);
         return USERS;

@@ -2,7 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
-import com.example.demo.service.UserDetailService;
+import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,13 +23,13 @@ import static com.example.demo.controller.DemoPaths.*;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final UserDetailService userService;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
     // start page
     @GetMapping(GET_USERS_URL)
     public String showAllUsers(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        User user = userService.loadUserByUsername(userDetails.getUsername());
+        User user = (User) userService.loadUserByUsername(userDetails.getUsername());
         model.addAttribute("newUser", new User());
         model.addAttribute("roleList", userService.getAllRoles());
         model.addAttribute("rolesList", user.getRoles());
