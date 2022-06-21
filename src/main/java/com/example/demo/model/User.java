@@ -23,8 +23,8 @@ public class User implements UserDetails {
     private long id;
     @NotNull
     private String username;
-    private String firstName;
-    private String lastName;
+    private String firstname;
+    private String lastname;
     @NotNull
     private String password;
     private byte age;
